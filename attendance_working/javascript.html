@@ -1,0 +1,422 @@
+<script>
+var GENIUS_LIST_ELE = "list-genius";
+
+var initialize = function(val){
+//alert(val);
+  google.script.run.withSuccessHandler(initSuccess).initDropDownValues(val);
+};
+var dropDownBench=function (val){
+//alert(val);
+google.script.run.withSuccessHandler(initSuccess).dropDownOnChange( val);
+
+
+}
+
+$( document ).ready(function() {
+
+initialize(0);
+
+});
+
+
+var toTitleCase = function (str) {
+	str = str.toLowerCase().split(' ');
+	for (var i = 0; i < str.length; i++) {
+		str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+	}
+	return str.join(' ');
+};
+
+
+function initSuccess(dataObj){
+initDropDowns(dataObj["DDhtml"],dataObj["DDvals"]);
+ initList(dataObj["geniusVals"]);
+ delayedFunctions();
+
+}
+
+function delayedFunctions(){
+$(".dropdown-item").click(function(e){
+  e.preventDefault();
+  var location, number= "";
+  var newVal=$(this).data("benchtag");
+  var inner=$(this).text().toString();
+  var el = $(this).parent().parent();
+  var dataArr=[];
+  var val = 0;
+  if(el.attr('id')=="tracker-cohort"){
+    if(newVal.includes("rich")){
+      location = "Richmond ";
+      number = newVal.match(/\d+/g).map(Number);
+      inner= location+number[0];
+
+    }else if(newVal.includes("oak")){
+      location = "Oakland  ";
+      number = newVal.match(/\d+/g).map(Number);
+      inner= location+number[0];
+
+    }else if(newVal.includes("all")){
+      $(".btn-cohort").val(newVal);
+    }else{
+    //error
+    }
+     dataArr.push(val,[newVal,inner]);
+//    console.log(dataArr)
+    initialize(dataArr);
+  }else if (el.attr('id')=="tracker-module" || el.attr('id')=="tracker-section" || el.attr('id')=="tracker-bench"){
+
+    if(newVal.includes("mod")){
+        val=1;
+//        alert(inner);
+
+       dropDownBench([1,["module",inner]]);
+
+    } else if(newVal.includes("sec")){
+        val=1;
+//        alert(inner);
+        var module = $("#tracker-module>button").html();
+       dropDownBench([1,["section",inner,module]]);
+
+    } else if(newVal.includes("bm")){
+        val=1;
+//        alert(inner);
+        var module = $("#tracker-module>button").html();
+         var section = $("#tracker-section>button").html();
+       dropDownBench([1,["bench",inner,section,module]]);
+
+    }
+
+
+    else{
+    //error
+    }
+    }
+
+});
+
+}
+
+//Initialize Drop Down Information
+function initList(geniusVals){
+  var cohort = $(".btn-cohort").val();
+  var list, first, last, name = "";
+  var infoArr=[];
+  var infoArr2=[];
+  var infoArr3 = [];
+
+//   var ele = listData[0];
+//  var geniusData = listData[1];
+//  var col = listData[2];
+
+
+ // console.log(geniusVals[0])
+  for (var i = 2; i < geniusVals[0].length; i++) {
+//  console.log(geniusVals[0][i][0] );
+//   console.log(geniusVals[0][i][2] );
+    if(geniusVals[0][i][0]=="" &&  geniusVals[0][i][1]==""&&geniusVals[0][i][2]==""){
+    break;
+  }else{
+  if(cohort.toLowerCase()== "all" || geniusVals[0][i][2].toLowerCase() == cohort.toLowerCase()){
+      infoArr.push(geniusVals[0][i][0] + " " + geniusVals[0][i][1]);
+      infoArr2.push(geniusVals[1][i][0]);
+      //console.log(geniusVals[0][i][0] +" : " +geniusVals[1][i-1][0]);
+      infoArr3.push(geniusVals[1][i][1]);
+    }
+  }
+}
+//console.log(infoArr2)
+
+ var n = document.getElementById(GENIUS_LIST_ELE);
+  $("#"+GENIUS_LIST_ELE).empty();
+  for (var i = 0; i < infoArr.length; i++) {
+    var parentNode = addNode("DIV", "row geniusInfo", n);
+
+    var childNode = addNode("DIV", "table-content col-sm-2", parentNode);
+    childNode = addNode("DIV", "checkbox-container", childNode);
+    childNode = addNode("INPUT", "checkbox", childNode, "acs", infoArr2[i]);
+
+   //childNode = addNode("DIV", "checkbox-container", childNode);
+    //childNode = addNode("INPUT", "checkbox", childNode, "acs", infoArr2[i]);
+
+
+    childNode = addNode("DIV", "table-content genius-info col-sm-4", parentNode);
+    //alert(infoArr2);
+    childNode = addNode("P", "table-header-label genius-name-info", childNode, infoArr[i]);
+
+
+    childNode = addNode("DIV", "table-content col-sm-6", parentNode);
+    childNode = addNode("TEXTAREA", "genius-name-info", childNode, infoArr3[i]);
+  }
+//console.log(infoArr);
+
+}
+
+
+//Function To Create Table List Of Geniuses
+function createList(listData) {
+
+
+  //  console.log(
+  //console.log( infoArr2)
+
+}
+
+function addNode(type, className, parentNode, name, val) {
+  if (type == "INPUT") {
+    var childNode = document.createElement(type);
+
+    childNode.setAttribute('onclick', "toggle(this);");
+    childNode.setAttribute('type', className);
+    childNode.setAttribute('name', name);
+    childNode.setAttribute('value', val);
+    if(val)
+      childNode.setAttribute('checked',val);
+
+    parentNode.appendChild(childNode);
+
+  } else if (type == "P") {
+    var childNode = document.createElement(type);
+    childNode.setAttribute('class', className);
+    childNode.textContent = name;
+    parentNode.appendChild(childNode);
+
+  } else if (type == "TEXTAREA") {
+    var childNode = document.createElement(type);
+    childNode.setAttribute('name', className);
+    //  childNode.setAttribute('class', className);
+    childNode.textContent = name;
+    parentNode.appendChild(childNode);
+  } else {
+    var childNode = document.createElement(type);
+    childNode.setAttribute('class', className);
+    parentNode.appendChild(childNode);
+  }
+
+  return childNode;
+}
+
+
+
+//Initialize Drop Down Information
+function initDropDowns(ddHTML,ddVals){
+ console.log("___________________________________ initDropDowns Function" );
+
+  //Add Values To Drop Down Buttons
+  for (var i = 0; i < ddVals.length; i++) {
+
+
+    if (ddVals[i][0]=="user-info" && ddHTML[i]!=""){
+     $("#tracker-"+ddVals[i][0]).text("Welcome Back, " +ddHTML[i]);
+
+
+    }else if(ddVals[i][0]=="bench-tag"){
+           $("#tracker-"+ddVals[i][0]).attr("data-benchtag" ,ddHTML[i]);
+
+    }else{
+      if(ddVals[i][0]== "cohort" && ddHTML[i]!=""){
+         $("#tracker-"+ddVals[i][0]+">button").html(ddHTML[i][1]).val(ddHTML[i][0]);
+         }
+      else if(ddHTML[i]!=""){
+        $("#tracker-"+ddVals[i][0]+">button").html(ddHTML[i]).val(ddHTML[i]);
+    }
+  } }
+  $(".dropdown-menu").empty();
+  //Add Items To Drop Down Buttons
+  appendVals(ddVals);
+  console.log("___________________________________ initDropDowns Function" );
+}
+
+function appendVals(dd_info) {
+//
+  for (var i = 0; i < dd_info.length; i++) {
+
+    if (dd_info[i][0] == "section" || dd_info[i][0] == "bench" ) {
+      continue;
+    }else if (dd_info[i][0] == "module") {
+      var modArr = [];
+      var secArr = [];
+      var benArr = [];
+
+      for (var j = 1; j < dd_info[i].length; j++) {
+
+        var pos = modArr.indexOf(dd_info[i][j]);
+
+        if (pos <= -1) {
+          modArr.push(dd_info[i][j]);
+          dropDownVals("tracker-" + dd_info[i][0], dd_info[i][j]);
+        }
+        if ( $("#tracker-module >button").html()== dd_info[i][j]) {
+          pos = secArr.indexOf(dd_info[i + 1][j]);
+          console.log(pos)
+          if (pos <= -1) {
+            secArr.push(dd_info[i + 1][j]);
+            dropDownVals("tracker-" + dd_info[i+1][0], dd_info[i+1][j]);
+          }
+          if ($("#tracker-section >button").html() == dd_info[i + 1][j]) {
+            pos = benArr.indexOf(dd_info[i+2][j]);
+
+            if (pos <= -1) {
+              benArr.push(dd_info[i + 2][j]);
+              dropDownVals("tracker-" + dd_info[i+2][0], dd_info[i+2][j]);
+              console.log(benArr)
+            }
+
+          }
+
+        }
+      }  }else{
+        for (var j = 1; j < dd_info[i].length; j++) {
+          if (dd_info[i][j] != "") {
+            dropDownVals("tracker-" + dd_info[i][0], dd_info[i][j]);
+          }
+        }
+      }
+  }
+  $("#tracker-section").removeClass( "hide" );
+  $("#tracker-bench").removeClass( "hide" );
+  }
+function dropDownVals(ele, infoArr) {
+
+  var n = document.getElementById(ele);
+  var list = n.getElementsByClassName("dropdown-menu")[0];
+  var node = document.createElement("A");
+  node.setAttribute('class', 'dropdown-item');
+  node.setAttribute('data-benchtag', infoArr.toLowerCase());
+//  node.setAttribute('onClick', 'toggleDD(this)');
+  if(ele=="tracker-cohort")
+    node.textContent = toTitleCase(infoArr) ;
+   else
+    node.textContent = infoArr ;
+  if(list){
+    list.appendChild(node);
+  }
+}
+
+
+
+function userInfo(val){
+  $(".user-info").text("Welcome Back "+val);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function getBenchTag(){
+  return $("div#tracker-bench-tag").attr("data-benchTag" );
+
+}
+
+
+
+
+
+
+
+//On Submit
+function submitInfo() {
+  var output = "";
+  var geniusArr = [];
+  var geniusRow;
+  $(".geniusInfo").each(function(index, element) {
+    //alert($(this).css('display') );
+    if(!($(this).css('display') =="none")){
+
+      geniusRow = [];
+      geniusRow.push($(this).find(".table-header-label").text());
+      geniusRow.push($(".btn-cohort").val());
+      geniusRow.push($(this).find("input").val());
+      geniusRow.push($(this).find("textarea").val());
+      geniusArr.push(geniusRow);
+      //    alert(geniusArr);
+
+    }
+  });
+  //***Needs Updating***//
+  var masterArr = [getBenchTag(), geniusArr];
+  console.log(masterArr)
+  google.script.run
+  .withSuccessHandler(saveSuccess)
+  .submitBenchMarks(masterArr);
+
+}
+
+//Check All Checkboxes
+function selectAll() {
+  var items = document.getElementsByName('acs');
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type == 'checkbox')
+      items[i].checked = true;
+    items[i].value = "true";
+
+  }
+}
+//Uncheck All Checkboxes
+function UnSelectAll() {
+  var items = document.getElementsByName('acs');
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type == 'checkbox')
+      items[i].checked = false;
+    items[i].value = "false";
+  }
+}
+
+//Onclick Of Check/Uncheck BTN
+$("#selectAll").click(function() {
+  if ($(this).val() == "true") {
+    UnSelectAll();
+    $(this).val("false");
+  } else {
+    selectAll();
+    $(this).val("true");
+  }
+});
+
+//
+
+//Onclick of Individual Checkboxes
+function toggle(el) {
+  if ($(el).val() == "true") {
+    $(el).val("false");
+  } else {
+    $(el).val("true");
+  }
+
+}
+
+$("#myInput").on("keyup", function() {
+
+  var value = $(this).val().toLowerCase();
+  var arr = []
+  $(".genius-name-info").filter(function() {
+
+    if ($(this).text().toLowerCase().indexOf(value) > -1) {
+        $(this).parent().parent().removeClass("hide");
+
+    } else {
+//     /console.log( $(this).nodeName);
+      $(this).parent().parent().addClass("hide");
+    }
+  });
+});
+
+
+function saveSuccess(data){
+  alert("Save Successful");
+}
+
+
+</script>
